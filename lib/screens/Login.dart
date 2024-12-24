@@ -25,7 +25,6 @@ class _LoginPageState extends State<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 50),
-                // Login Image
                 Center(
                   child: Image.asset(
                     'assets/images/Login.jpg',
