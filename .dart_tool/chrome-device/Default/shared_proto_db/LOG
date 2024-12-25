@@ -1,6 +1,2 @@
-2024/12/22-22:10:46.527 3170 Reusing MANIFEST C:\Users\faish\AppData\Local\Temp\flutter_tools.1e5ea848\flutter_tools_chrome_device.ac0a19d3\Default\shared_proto_db/MANIFEST-000001
-2024/12/22-22:10:46.528 3170 Recovering log #3
-2024/12/22-22:10:46.532 3170 Reusing old log C:\Users\faish\AppData\Local\Temp\flutter_tools.1e5ea848\flutter_tools_chrome_device.ac0a19d3\Default\shared_proto_db/000003.log 
-2024/12/22-22:11:35.669 1ab8 Level-0 table #5: started
-2024/12/22-22:11:35.675 1ab8 Level-0 table #5: 134237 bytes OK
-2024/12/22-22:11:35.678 1ab8 Delete type=0 #3
+2024/12/25-21:37:49.887 3d50 Creating DB C:\Users\faish\AppData\Local\Temp\flutter_tools.6b164a3e\flutter_tools_chrome_device.2280554d\Default\shared_proto_db since it was missing.
+2024/12/25-21:37:49.895 3d50 Reusing MANIFEST C:\Users\faish\AppData\Local\Temp\flutter_tools.6b164a3e\flutter_tools_chrome_device.2280554d\Default\shared_proto_db/MANIFEST-000001

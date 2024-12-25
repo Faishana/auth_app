@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:login_process/screens/Login.dart';
 
 class WelcomePage extends StatelessWidget {
-  const WelcomePage({super.key});
+  final String username;
+
+  const WelcomePage({super.key, required this.username});
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +32,14 @@ class WelcomePage extends StatelessWidget {
                   color: Color(0xFF1E3148),
                 ),
               ),
+              Text(
+                username,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF1E3148),
+                ),
+              ),
               const SizedBox(height: 16),
               const Text(
                 'You have successfully logged in',
@@ -43,7 +55,13 @@ class WelcomePage extends StatelessWidget {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    FirebaseAuth.instance.signOut();
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const LoginPage()),
+                      (route) => false,
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1E3148),

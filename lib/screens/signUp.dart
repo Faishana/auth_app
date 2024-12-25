@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'login.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -11,6 +15,50 @@ class SignUpPage extends StatefulWidget {
 class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
   bool _rememberMe = false;
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<void> _signUp() async {
+    try {
+      // Create user in Firebase Auth
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      // Store additional user data in Firestore
+      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        'username': _usernameController.text,
+        'email': _emailController.text,
+        'createdAt': Timestamp.now(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registration successful!')),
+        );
+        Navigator.pop(context);
+      }
+    } on FirebaseAuthException catch (e) {
+      String message = 'An error occurred';
+      if (e.code == 'weak-password') {
+        message = 'The password provided is too weak.';
+      } else if (e.code == 'email-already-in-use') {
+        message = 'An account already exists for that email.';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +104,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     children: [
                       // Username Field
                       TextFormField(
+                        controller: _usernameController,
                         decoration: InputDecoration(
                           labelText: 'Username',
                           prefixIcon: const Icon(Icons.person_outline),
@@ -69,6 +118,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       const SizedBox(height: 16),
                       // Email Field
                       TextFormField(
+                        controller: _emailController,
                         decoration: InputDecoration(
                           labelText: 'Email',
                           prefixIcon: const Icon(Icons.email_outlined),
@@ -82,6 +132,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       const SizedBox(height: 16),
                       // Password Field
                       TextFormField(
+                        controller: _passwordController,
                         obscureText: true,
                         decoration: InputDecoration(
                           labelText: 'Password',
@@ -114,7 +165,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: _signUp,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF1E3148),
                             shape: RoundedRectangleBorder(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:login_process/screens/signUp.dart';
-import 'package:login_process/screens/WelcomePage.dart';
+import 'package:login_process/screens/welcomePage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,6 +14,55 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   bool _rememberMe = false;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<void> _signIn() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+
+        DocumentSnapshot userData = await _firestore
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .get();
+
+        if (userData.exists) {
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => WelcomePage(
+                  username: userData['username'] ?? _emailController.text,
+                ),
+              ),
+            );
+          }
+        }
+      } on FirebaseAuthException catch (e) {
+        String message = 'An error occurred';
+        if (e.code == 'user-not-found') {
+          message = 'No user found for that email.';
+        } else if (e.code == 'wrong-password') {
+          message = 'Wrong password provided.';
+        } else if (e.code == 'invalid-email') {
+          message = 'The email address is badly formatted.';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,21 +105,32 @@ class _LoginPageState extends State<LoginPage> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      // Username Field
+                      // Email Field
                       TextFormField(
+                        controller: _emailController,
                         decoration: InputDecoration(
-                          labelText: 'Username',
-                          prefixIcon: const Icon(Icons.person_outline),
+                          labelText: 'Email',
+                          prefixIcon: const Icon(Icons.email_outlined),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                           filled: true,
                           fillColor: Colors.grey[50],
                         ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email';
+                          }
+                          if (!value.contains('@')) {
+                            return 'Please enter a valid email';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 16),
                       // Password Field
                       TextFormField(
+                        controller: _passwordController,
                         obscureText: true,
                         decoration: InputDecoration(
                           labelText: 'Password',
@@ -79,6 +141,15 @@ class _LoginPageState extends State<LoginPage> {
                           filled: true,
                           fillColor: Colors.grey[50],
                         ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your password';
+                          }
+                          if (value.length < 6) {
+                            return 'Password must be at least 6 characters';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 16),
                       // Remember me switch
@@ -99,14 +170,7 @@ class _LoginPageState extends State<LoginPage> {
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const WelcomePage(),
-                              ),
-                            );
-                          },
+                          onPressed: _signIn,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF1E3148),
                             shape: RoundedRectangleBorder(
