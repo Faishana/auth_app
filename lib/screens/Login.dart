@@ -22,41 +22,44 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _signIn() async {
     if (_formKey.currentState!.validate()) {
       try {
+        print('Attempting to sign in with email: ${_emailController.text}');
         UserCredential userCredential = await _auth.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
 
+        print('User authenticated, fetching user data...');
         DocumentSnapshot userData = await _firestore
             .collection('users')
             .doc(userCredential.user!.uid)
             .get();
 
-        if (userData.exists) {
-          if (mounted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => WelcomePage(
-                  username: userData['username'] ?? _emailController.text,
-                ),
+        if (mounted && userData.exists) {
+          print('User data found: ${userData.data()}');
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => WelcomePage(
+                username: userData.get('username') ?? _emailController.text,
               ),
-            );
-          }
+            ),
+          );
+        } else {
+          print('No user data found in Firestore');
         }
       } on FirebaseAuthException catch (e) {
+        print('FirebaseAuthException: ${e.code}');
         String message = 'An error occurred';
         if (e.code == 'user-not-found') {
           message = 'No user found for that email.';
         } else if (e.code == 'wrong-password') {
           message = 'Wrong password provided.';
-        } else if (e.code == 'invalid-email') {
-          message = 'The email address is badly formatted.';
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
       } catch (e) {
+        print('Error during sign in: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
         );
