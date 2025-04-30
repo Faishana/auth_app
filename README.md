@@ -1,7 +1,7 @@
 # login_process
 
 A new Flutter project.
-
+A simple user authondication system
 ## Getting Started
 
 This project is a starting point for a Flutter application.
